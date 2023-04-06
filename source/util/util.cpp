@@ -304,7 +304,7 @@ namespace inst::util {
     
    std::vector<std::string> checkForAppUpdate () {
         try {
-            std::string jsonData = inst::curl::downloadToBuffer("https://api.github.com/repos/Huntereb/Awoo-Installer/releases/latest", 0, 0, 1000L);
+            std::string jsonData = inst::curl::downloadToBuffer("https://api.github.com/repos/dragonflylee/Awoo-Installer/releases/latest", 0, 0, 1000L);
             if (jsonData.size() == 0) return {};
             nlohmann::json ourJson = nlohmann::json::parse(jsonData);
             if (ourJson["tag_name"].get<std::string>() != inst::config::appVersion) {
