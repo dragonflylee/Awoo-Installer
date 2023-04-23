@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/ui source/data source/install source/nx source/nx/ipc source/util
+SOURCES		:=	source source/ui source/data source/install source/nx source/nx/ipc source/drive source/util
 DATA		:=	data
-INCLUDES	:=	include include/ui include/data include/install include/nx include/nx/ipc include/util include/Plutonium/Plutonium/Output-switch/include
+INCLUDES	:=	include include/ui include/data include/install include/nx include/nx/ipc include/util include/Plutonium/Plutonium/Include include/libusbhsfs/include
 APP_TITLE	:=	Awoo Installer
 APP_AUTHOR	:=	Huntereb & Behemoth
 APP_VERSION	:=	$(shell git describe --tags)
@@ -51,16 +51,15 @@ ROMFS		:=	romfs
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+DEFINES  := -DAPP_VERSION=$(APP_VERSION)
 
-CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
-			$(ARCH) $(DEFINES)
+CFLAGS	:=	-g -Wall -O2 -ffunction-sections $(ARCH) $(DEFINES)
 CFLAGS	+=	 `curl-config --cflags`
 CFLAGS	+=	 `sdl2-config --cflags` `freetype-config --cflags`
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -Wall #-Werror -D__DEBUG__ -DNXLINK_DEBUG
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -std=gnu++17
-
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
@@ -75,7 +74,7 @@ LIBS	+=	-lmbedtls -lmbedcrypto -lminizip -lzstd # Memes
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(LIBNX) $(CURDIR)/include/Plutonium/Plutonium/Output
+LIBDIRS	:= $(PORTLIBS) $(LIBNX) $(CURDIR)/include/Plutonium/Plutonium/Output $(CURDIR)/include/libusbhsfs
 
 
 #---------------------------------------------------------------------------------
@@ -165,15 +164,18 @@ ifneq ($(ROMFS),)
 	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: $(BUILD) clean all
+.PHONY: $(BUILD) clean all depend
 
 #---------------------------------------------------------------------------------
 all: $(BUILD)
 
+depend:
+	@$(MAKE) -C $(CURDIR)/include/Plutonium/Plutonium
+	@$(MAKE) -C $(CURDIR)/include/libusbhsfs fs-libs
+	@$(MAKE) -C $(CURDIR)/include/libusbhsfs BUILD_TYPE=GPL all
+
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	#comment this out if you are hacking on the code or compilation will take forever
-	$(MAKE) --no-print-directory -C include/Plutonium -f Makefile lib
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------

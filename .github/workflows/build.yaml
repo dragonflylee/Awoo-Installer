@@ -1,0 +1,52 @@
+name: Awoo-Installer
+
+on:
+  push:
+    tags: ["*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64:20230419
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Update packages
+      run: |
+        apt-get update
+        apt-get upgrade -y patch automake diffutils pkgconf fakeroot file zstd zip
+        dkp-pacman --noconfirm -U https://wii.leseratte10.de/devkitPro/other-stuff/dkp-toolchain-vars-1.0.2-1-any.pkg.tar.xz
+        adduser --gecos '' --disabled-password builder
+        echo 'builder ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/builder
+    
+    - name: Set workspace permissions
+      run: |
+        chown $(id -u):$(id -g) -R "$GITHUB_WORKSPACE"
+        git config --system --add safe.directory '*'
+
+    - name: Build libusbhsfs dependencies
+      run: |
+        chown -R builder:builder include/libusbhsfs
+        su - builder -c "make -C $(pwd)/include/libusbhsfs fs-libs"
+        make -C include/libusbhsfs BUILD_TYPE=GPL all
+
+    - name: Build Awoo
+      run: |
+        make -C include/Plutonium/Plutonium -j$(nproc)
+        make -j$(nproc) all
+        mkdir -p switch
+        ln -s $(pwd) switch/Awoo-Installer
+        zip -9 Awoo-Installer.zip switch/Awoo-Installer/Awoo-Installer.nro
+
+    - name: Release and Upload Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Awoo-Installer ${{ github.ref_name }}
+        files: Awoo-Installer.zip

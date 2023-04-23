@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "Switch",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${DEVKITPRO}/libnx/include",
+        "${DEVKITPRO}/devkitA64/aarch64-none-elf/include/**",
+        "${DEVKITPRO}/portlibs/switch/include/**"
+      ],
+      "defines": [
+        "__SWITCH__"
+      ],
+      "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-g++",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-arm64"
+    }
+  ],
+  "version": 4
+}
