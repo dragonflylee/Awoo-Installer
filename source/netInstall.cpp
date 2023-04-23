@@ -152,7 +152,7 @@ namespace netInstStuff{
                 inst::ui::instPage::setTopInstInfoText("inst.info_page.top_info0"_lang + urlNames[urlItr] + ourSource);
                 std::unique_ptr<tin::install::Install> installTask;
 
-                if (inst::curl::downloadToBuffer(ourUrlList[urlItr], 0x100, 0x103) == "HEAD") {
+                if (inst::curl::getRange(ourUrlList[urlItr], 0x100, 0x103) == "HEAD") {
                     auto httpXCI = std::make_shared<tin::install::xci::HTTPXCI>(ourUrlList[urlItr]);
                     installTask = std::make_unique<tin::install::xci::XCIInstallTask>(m_destStorageId, inst::config::ignoreReqVers, httpXCI);
                 } else {
@@ -216,8 +216,6 @@ namespace netInstStuff{
 
         try
         {
-            ASSERT_OK(curl_global_init(CURL_GLOBAL_ALL), "Curl failed to initialized");
-
             // Initialize the server socket if it hasn't already been
             if (m_serverSocket == 0)
             {

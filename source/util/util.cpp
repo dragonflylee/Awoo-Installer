@@ -133,7 +133,9 @@ namespace inst::util {
 
         CURL *curl = curl_easy_init();
         int outlength;
-        std::string finalString = curl_easy_unescape(curl, seglist[seglist.size() - 1].c_str(), seglist[seglist.size() - 1].length(), &outlength);
+        char *decoded = curl_easy_unescape(curl, seglist[seglist.size() - 1].c_str(), seglist[seglist.size() - 1].length(), &outlength);
+        std::string finalString(decoded, outlength);
+        curl_free(decoded);
         curl_easy_cleanup(curl);
 
         return finalString;
@@ -182,20 +184,6 @@ namespace inst::util {
             rc = swkbdShow(&kbd, tmpoutstr, sizeof(tmpoutstr));
             swkbdClose(&kbd);
             if (R_SUCCEEDED(rc) && tmpoutstr[0] != 0) return(((std::string)(tmpoutstr)));
-        }
-        return "";
-    }
-
-    std::string getDriveFileName(std::string fileId) {
-        std::string htmlData = inst::curl::downloadToBuffer("https://drive.google.com/file/d/" + fileId  + "/view");
-        if (htmlData.size() > 0) {
-            std::smatch ourMatches;
-            std::regex ourRegex("<title>\\s*(.+?)\\s*</title>");
-            std::regex_search(htmlData, ourMatches, ourRegex);
-            if (ourMatches.size() > 1) {
-                if (ourMatches[1].str() == "Google Drive -- Page Not Found") return "";
-                return ourMatches[1].str().substr(0, ourMatches[1].str().size() - 15);
-             }
         }
         return "";
     }
@@ -302,17 +290,17 @@ namespace inst::util {
         return;
     }
     
-   std::vector<std::string> checkForAppUpdate () {
+    bool checkForAppUpdate() {
         try {
-            std::string jsonData = inst::curl::downloadToBuffer("https://api.github.com/repos/dragonflylee/Awoo-Installer/releases/latest", 0, 0, 1000L);
-            if (jsonData.size() == 0) return {};
+            std::string jsonData = inst::curl::getRange("https://api.github.com/repos/dragonflylee/Awoo-Installer/releases/latest", 0, 0, 1000L);
+            if (jsonData.size() == 0) return false;
             nlohmann::json ourJson = nlohmann::json::parse(jsonData);
-            if (ourJson["tag_name"].get<std::string>() != inst::config::appVersion) {
-                std::vector<std::string> ourUpdateInfo = {ourJson["tag_name"].get<std::string>(), ourJson["assets"][0]["browser_download_url"].get<std::string>()};
-                inst::config::updateInfo = ourUpdateInfo;
-                return ourUpdateInfo;
+            std::string tagName = ourJson["tag_name"].get<std::string>();
+            if (tagName != inst::config::appVersion) {
+                inst::config::updateInfo = { tagName, ourJson["assets"][0]["browser_download_url"] };
+                return true;
             }
         } catch (...) {}
-        return {};
+        return false;
     }
 }
