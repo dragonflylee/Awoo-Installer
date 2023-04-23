@@ -127,13 +127,16 @@ namespace inst::util {
         std::string segment;
         std::vector<std::string> seglist;
 
-        while(std::getline(ourStream, segment, '/')) {
+        while (std::getline(ourStream, segment, '/')) {
             seglist.push_back(segment);
+        }
+        if (seglist.empty()) {
+            seglist.push_back(ourString);
         }
 
         CURL *curl = curl_easy_init();
         int outlength;
-        char *decoded = curl_easy_unescape(curl, seglist[seglist.size() - 1].c_str(), seglist[seglist.size() - 1].length(), &outlength);
+        char *decoded = curl_easy_unescape(curl, seglist.back().c_str(), seglist.back().length(), &outlength);
         std::string finalString(decoded, outlength);
         curl_free(decoded);
         curl_easy_cleanup(curl);
