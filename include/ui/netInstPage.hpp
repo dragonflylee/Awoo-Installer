@@ -1,5 +1,6 @@
 #pragma once
 #include <pu/Plutonium>
+#include "util/drive.hpp"
 
 using namespace pu::ui::elm;
 namespace inst::ui {
@@ -15,8 +16,9 @@ namespace inst::ui {
             Image::Ref titleImage;
             TextBlock::Ref appVersionText;
         private:
-            std::vector<std::string> ourUrls;
+            drive::entries ourUrls;
             std::vector<std::string> selectedUrls;
+            std::vector<std::string> lastFileId;
             std::vector<std::string> alternativeNames;
             TextBlock::Ref butText;
             Rectangle::Ref topRect;

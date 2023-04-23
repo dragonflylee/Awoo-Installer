@@ -7,7 +7,6 @@ namespace inst::config {
     static const std::string configPath = appDir + "/config.json";
     static const std::string appVersion = "1.3.5";
 
-    extern std::string gAuthKey;
     extern std::string sigPatchesUrl;
     extern std::string lastNetUrl;
     extern std::vector<std::string> updateInfo;

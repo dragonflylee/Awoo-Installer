@@ -14,7 +14,7 @@
 namespace inst::ui {
     extern MainApplication *mainApp;
 
-    std::string lastFileID = "";
+    drive::drive::ref client;
     std::string sourceString = "";
 
     netInstPage::netInstPage() : Layout::Layout() {
@@ -53,17 +53,30 @@ namespace inst::ui {
     }
 
     void netInstPage::drawMenuItems(bool clearItems) {
-        if (clearItems) this->selectedUrls = {};
-        if (clearItems) this->alternativeNames = {};
+        if (clearItems) {
+            this->selectedUrls.clear();
+            this->alternativeNames.clear();
+        }
         this->menu->ClearItems();
-        for (auto& url: this->ourUrls) {
-            std::string itm = inst::util::shortenString(inst::util::formatUrlString(url), 56, true);
+        if (this->lastFileId.size() > 1) {
+            std::string itm = "..";
             auto ourEntry = pu::ui::elm::MenuItem::New(itm);
             ourEntry->SetColor(COLOR("#FFFFFFFF"));
-            ourEntry->SetIcon("romfs:/images/icons/checkbox-blank-outline.png");
-            for (long unsigned int i = 0; i < this->selectedUrls.size(); i++) {
-                if (this->selectedUrls[i] == url) {
-                    ourEntry->SetIcon("romfs:/images/icons/check-box-outline.png");
+            ourEntry->SetIcon("romfs:/images/icons/folder-upload.png");
+            this->menu->AddItem(ourEntry);
+        }
+        for (auto& url: this->ourUrls) {
+            std::string itm = inst::util::shortenString(url.name, 56, true);
+            auto ourEntry = pu::ui::elm::MenuItem::New(itm);
+            ourEntry->SetColor(COLOR("#FFFFFFFF"));
+            if (url.folder) {
+                ourEntry->SetIcon("romfs:/images/icons/folder.png");
+            } else {
+                ourEntry->SetIcon("romfs:/images/icons/checkbox-blank-outline.png");
+                for (long unsigned int i = 0; i < this->selectedUrls.size(); i++) {
+                    if (this->selectedUrls[i] == url.id) {
+                        ourEntry->SetIcon("romfs:/images/icons/check-box-outline.png");
+                    }
                 }
             }
             this->menu->AddItem(ourEntry);
@@ -71,51 +84,103 @@ namespace inst::ui {
     }
 
     void netInstPage::selectTitle(int selectedIndex) {
+        std::string fileId;
+        int dirListSize = this->lastFileId.size() > 1 ? 1 : 0;
+        if (selectedIndex < dirListSize) {
+            this->lastFileId.pop_back();
+            fileId = this->lastFileId.back();
+        } else {
+            fileId = this->ourUrls[selectedIndex - dirListSize].id;
+        }
+
         if (this->menu->GetItems()[selectedIndex]->GetIcon() == "romfs:/images/icons/check-box-outline.png") {
             for (long unsigned int i = 0; i < this->selectedUrls.size(); i++) {
-                if (this->selectedUrls[i] == this->ourUrls[selectedIndex]) this->selectedUrls.erase(this->selectedUrls.begin() + i);
+                if (this->selectedUrls[i] == fileId)
+                    this->selectedUrls.erase(this->selectedUrls.begin() + i);
             }
-        } else this->selectedUrls.push_back(this->ourUrls[selectedIndex]);
-        this->drawMenuItems(false);
+            this->drawMenuItems(false);
+        } else if (this->menu->GetItems()[selectedIndex]->GetIcon() == "romfs:/images/icons/checkbox-blank-outline.png") {
+            this->selectedUrls.push_back(fileId);
+            this->drawMenuItems(false);
+        } else {
+            this->ourUrls = client->list(fileId);
+            if (selectedIndex >= dirListSize) {
+                this->lastFileId.push_back(fileId);
+            }
+            this->drawMenuItems(true);
+        }
     }
 
     void netInstPage::startNetwork() {
+        std::vector<std::string> options = {"inst.net.src.opt0"_lang, "inst.net.src.opt1"_lang};
+        std::string url;
+    
         while (true) {
             this->butText->SetText("inst.net.buttons"_lang);
             this->menu->SetVisible(false);
             this->menu->ClearItems();
             this->infoImage->SetVisible(true);
             mainApp->LoadLayout(mainApp->netinstPage);
-            this->ourUrls = netInstStuff::OnSelected();
-            if (!this->ourUrls.size()) {
+            this->ourUrls.clear();
+            this->selectedUrls.clear();
+            
+            auto urls = netInstStuff::OnSelected();
+            if (urls.empty()) {
                 mainApp->LoadLayout(mainApp->mainPage);
                 return;
-            } else if (this->ourUrls[0] == "supplyUrl") {
-                std::string keyboardResult = inst::util::softwareKeyboard("inst.net.url.hint"_lang, inst::config::lastNetUrl, 500);
-                if (keyboardResult.size() > 0) {
-                    if (inst::util::formatUrlString(keyboardResult) == "" || keyboardResult == "https://" || keyboardResult == "http://") {
+            }
+            if (urls[0] == "supplyUrl") {
+                switch (mainApp->CreateShowDialog("inst.net.src.title"_lang, "common.cancel_desc"_lang, options, false)) {
+                case 0:
+                    url = inst::util::softwareKeyboard("inst.net.url.hint"_lang, inst::config::lastNetUrl, 500);
+                    if (url.empty()) continue;
+
+                    if (inst::util::formatUrlString(url) == "" || url == "https://" || url == "http://") {
                         mainApp->CreateShowDialog("inst.net.url.invalid"_lang, "", {"common.ok"_lang}, false);
-                    } else {
-                        inst::config::lastNetUrl = keyboardResult;
-                        inst::config::setConfig();
-                        sourceString = "inst.net.url.source_string"_lang;
-                        this->selectedUrls = {keyboardResult};
-                        this->startInstall(true);
-                        return;
+                        continue;
                     }
+                    // if url is single file, start install
+                    for (auto& ext : drive::knownExts) {
+                        if (url.find(ext) != std::string::npos) {
+                            this->selectedUrls = { url };
+                            this->startInstall(true);
+                            return;
+                        }
+                    }
+                    if (url.back() != '/') {
+                        url += '/';
+                    }
+                    inst::config::lastNetUrl = url;
+                    inst::config::setConfig();
+
+                    client = drive::new_drive(drive::dt_httpdir);
+                    this->ourUrls = client->list(url);
+
+                    if (this->ourUrls.empty()) {
+                        inst::ui::mainApp->CreateShowDialog("inst.net.http.invalid"_lang, "", {"common.ok"_lang}, false);
+                        continue;
+                    }
+                    this->lastFileId.push_back(url);
+                    break;
+                case 1:
+                    break;
                 }
             } else {
-                mainApp->CallForRender(); // If we re-render a few times during this process the main screen won't flicker
-                sourceString = "inst.net.source_string"_lang;
-                this->pageInfoText->SetText("inst.net.top_info"_lang);
-                this->butText->SetText("inst.net.buttons1"_lang);
-                this->drawMenuItems(true);
-                this->menu->SetSelectedIndex(0);
-                mainApp->CallForRender();
-                this->infoImage->SetVisible(false);
-                this->menu->SetVisible(true);
-                return;
+                for (std::string url : urls) {
+                    this->ourUrls.push_back({ id: url, name: inst::util::formatUrlString(url) });
+                }
             }
+
+            mainApp->CallForRender(); // If we re-render a few times during this process the main screen won't flicker
+            sourceString = "inst.net.source_string"_lang;
+            this->pageInfoText->SetText("inst.net.top_info"_lang);
+            this->butText->SetText("inst.net.buttons1"_lang);
+            this->drawMenuItems(true);
+            this->menu->SetSelectedIndex(0);
+            mainApp->CallForRender();
+            this->infoImage->SetVisible(false);
+            this->menu->SetVisible(true);
+            return;
         }
     }
 
@@ -138,10 +203,7 @@ namespace inst::ui {
 
     void netInstPage::onInput(u64 Down, u64 Up, u64 Held, pu::ui::Touch Pos) {
         if (Down & HidNpadButton_B) {
-            if (this->menu->GetItems().size() > 0){
-                if (this->selectedUrls.size() == 0) {
-                    this->selectTitle(this->menu->GetSelectedIndex());
-                }
+            if (this->selectedUrls.size() > 0){
                 netInstStuff::sendExitCommands(inst::util::formatUrlLink(this->selectedUrls[0]));
             }
             netInstStuff::OnUnwound();
@@ -156,18 +218,17 @@ namespace inst::ui {
         if ((Down & HidNpadButton_Y)) {
             if (this->selectedUrls.size() == this->menu->GetItems().size()) this->drawMenuItems(true);
             else {
-                for (long unsigned int i = 0; i < this->menu->GetItems().size(); i++) {
-                    if (this->menu->GetItems()[i]->GetIcon() == "romfs:/images/icons/check-box-outline.png") continue;
-                    else this->selectTitle(i);
+                for (size_t i = 0; i < this->menu->GetItems().size(); i++) {
+                    if (this->menu->GetItems()[i]->GetIcon() == "romfs:/images/icons/checkbox-blank-outline.png")
+                        this->selectTitle(i);
                 }
                 this->drawMenuItems(false);
             }
         }
         if (Down & HidNpadButton_Plus) {
-            if (this->selectedUrls.size() == 0) {
-                this->selectTitle(this->menu->GetSelectedIndex());
+            if (this->selectedUrls.size() > 0) {
+                this->startInstall(false);
             }
-            this->startInstall(false);
         }
     }
 }
