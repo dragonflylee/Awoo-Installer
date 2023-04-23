@@ -159,7 +159,6 @@ namespace inst::ui {
         if ((Down & HidNpadButton_A) || (Up & TouchPseudoKey)) {
             std::string keyboardResult;
             int rc;
-            std::vector<std::string> downloadUrl;
             std::vector<std::string> languageList;
             switch (this->menu->GetSelectedIndex()) {
                 case 0:
@@ -286,12 +285,11 @@ namespace inst::ui {
                         inst::ui::mainApp->CreateShowDialog("main.net.title"_lang, "main.net.desc"_lang, {"common.ok"_lang}, true);
                         break;
                     }
-                    downloadUrl = inst::util::checkForAppUpdate();
-                    if (!downloadUrl.size()) {
+                    if (!inst::util::checkForAppUpdate()) {
                         mainApp->CreateShowDialog("options.update.title_check_fail"_lang, "options.update.desc_check_fail"_lang, {"common.ok"_lang}, false);
                         break;
                     }
-                    this->askToUpdate(downloadUrl);
+                    this->askToUpdate(inst::config::updateInfo);
                     break;
                 case 9:
                     inst::ui::mainApp->CreateShowDialog("options.credits.title"_lang, "options.credits.desc"_lang, {"common.close"_lang}, true);
