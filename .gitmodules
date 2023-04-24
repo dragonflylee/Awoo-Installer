@@ -4,3 +4,6 @@
 [submodule "include/libusbhsfs"]
 	path = include/libusbhsfs
 	url = https://github.com/DarkMatterCore/libusbhsfs.git
+[submodule "include/qrcodegen"]
+	path = include/qrcodegen
+	url = https://github.com/nayuki/QR-Code-generator

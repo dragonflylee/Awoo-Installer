@@ -6,6 +6,7 @@
 namespace inst::config {
     std::string sigPatchesUrl;
     std::string lastNetUrl;
+    std::string aliDriveToken;
     std::vector<std::string> updateInfo;
     int languageSetting;
     bool autoUpdate;
@@ -20,6 +21,7 @@ namespace inst::config {
         nlohmann::json j = {
             {"autoUpdate", autoUpdate},
             {"deletePrompt", deletePrompt},
+            {"aliDriveToken", aliDriveToken},
             {"gayMode", gayMode},
             {"ignoreReqVers", ignoreReqVers},
             {"languageSetting", languageSetting},
@@ -40,6 +42,7 @@ namespace inst::config {
             file >> j;
             autoUpdate = j["autoUpdate"].get<bool>();
             deletePrompt = j["deletePrompt"].get<bool>();
+            aliDriveToken = j["aliDriveToken"].get<std::string>();
             gayMode = j["gayMode"].get<bool>();
             ignoreReqVers = j["ignoreReqVers"].get<bool>();
             languageSetting = j["languageSetting"].get<int>();

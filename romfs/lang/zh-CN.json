@@ -38,7 +38,8 @@
             "src": {
                 "title": "请选择安装来源？",
                 "opt0": "网络链接",
-                "opt1": "Google 网盘"
+                "opt1": "Google 网盘",
+                "opt2": "阿里云盘"
             },
             "url": {
                 "hint": "输入文件链接地址 (URL)",
@@ -50,6 +51,8 @@
                 "alt_name": "Google 网盘文件",
                 "source_string": " 通过 Google 网盘"
             },
+            "qr_new": "请用手机 App 扫码",
+            "qr_scaned": "扫描成功, 请在手机上根据提示确认登录",
             "top_info": "在服务器中选择将要安装的文件，然后按 \ue0ef 以安装！",
             "top_info1": "正在等待连接… Switch 的 IP 地址是：",
             "failed": "远程安装失败！",

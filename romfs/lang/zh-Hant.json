@@ -38,7 +38,8 @@
             "src": {
                 "title": "要從什麼路徑來源進行安裝？",
                 "opt0": "URL網路位址",
-                "opt1": "Google網路硬碟"
+                "opt1": "Google網路硬碟",
+                "opt2": "Aliyun Drive"
             },
             "url": {
                 "hint": "請輸入檔案的URL網路位址",
@@ -50,6 +51,8 @@
                 "alt_name": "Google網路硬碟檔案",
                 "source_string": "來源為Google網路硬碟"
             },
+            "qr_new": "請用手機 App 掃碼",
+            "qr_scaned": "掃描成功, 請在手機上根據提示確認登錄",
             "top_info": "選定要從伺服器安裝的檔案後，請按+鈕",
             "top_info1": "正在等待連線中... 你的Switch主機IP是: ",
             "failed": "遠端安裝失敗！",

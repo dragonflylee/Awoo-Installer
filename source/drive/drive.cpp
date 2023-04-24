@@ -1,5 +1,6 @@
 #include "drive.hpp"
 #include "httpindex.hpp"
+#include "aliyundrive.hpp"
 
 namespace inst::drive {
 
@@ -12,6 +13,9 @@ drive::ref new_drive(drive_type type) {
         switch (type) {
         case dt_httpdir:
             client = std::make_shared<httpdir>();
+            break;
+        case dt_alidrive:
+            client = std::make_unique<aliyundrive>();
             break;
         default:
             throw std::runtime_error("unsupport drive type");

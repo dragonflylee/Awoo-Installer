@@ -38,7 +38,8 @@
             "src": {
                 "title": "Where do you want to install from?",
                 "opt0": "URL",
-                "opt1": "Google Drive"
+                "opt1": "Google Drive",
+                "opt2": "AliyunDrive"
             },
             "url": {
                 "hint": "Enter the Internet address of a file",
@@ -50,6 +51,8 @@
                 "alt_name": "Google Drive File",
                 "source_string": " from Google Drive"
             },
+            "qr_new": "Please scan qrcode",
+            "qr_scaned": "scaned successfully",
             "top_info": "Select what files you want to install from the server, then press the Plus button!",
             "top_info1": "Waiting for a connection... Your Switch's IP Address is: ",
             "failed": "Failed to perform remote install!",

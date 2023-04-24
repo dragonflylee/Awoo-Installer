@@ -16,7 +16,7 @@ namespace inst::ui {
             Image::Ref titleImage;
             TextBlock::Ref appVersionText;
         private:
-            drive::entries ourUrls;
+            drive::drive::entries ourUrls;
             std::vector<std::string> selectedUrls;
             std::vector<std::string> lastFileId;
             std::vector<std::string> alternativeNames;
@@ -26,6 +26,7 @@ namespace inst::ui {
             Rectangle::Ref botRect;
             pu::ui::elm::Menu::Ref menu;
             Image::Ref infoImage;
+            Image::Ref qrcodeImage;
             void drawMenuItems(bool clearItems);
             void selectTitle(int selectedIndex);
     };
