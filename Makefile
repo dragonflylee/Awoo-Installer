@@ -51,6 +51,7 @@ ROMFS		:=	romfs
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+DEFINES  := -DAPP_VERSION=$(APP_VERSION)
 
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections $(ARCH) $(DEFINES)
 CFLAGS	+=	 `curl-config --cflags`
@@ -59,7 +60,6 @@ CFLAGS	+=	 `sdl2-config --cflags` `freetype-config --cflags`
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -Wall #-Werror -D__DEBUG__ -DNXLINK_DEBUG
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -std=gnu++17
-
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
