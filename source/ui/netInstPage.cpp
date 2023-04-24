@@ -41,6 +41,8 @@ namespace inst::ui {
         this->menu->SetOnFocusColor(COLOR("#00000033"));
         this->menu->SetScrollbarColor(COLOR("#17090980"));
         this->infoImage = Image::New(453, 292, "romfs:/images/icons/lan-connection-waiting.png");
+        this->qrcodeImage = Image::New(435, 155, "romfs:/images/icons/lan-connection-waiting.png");
+        this->qrcodeImage->SetVisible(false);
         this->Add(this->topRect);
         this->Add(this->infoRect);
         this->Add(this->botRect);
@@ -50,6 +52,7 @@ namespace inst::ui {
         this->Add(this->pageInfoText);
         this->Add(this->menu);
         this->Add(this->infoImage);
+        this->Add(this->qrcodeImage);
     }
 
     void netInstPage::drawMenuItems(bool clearItems) {
@@ -101,18 +104,28 @@ namespace inst::ui {
             this->drawMenuItems(false);
         } else if (this->menu->GetItems()[selectedIndex]->GetIcon() == "romfs:/images/icons/checkbox-blank-outline.png") {
             this->selectedUrls.push_back(fileId);
+            this->alternativeNames.push_back(this->ourUrls[selectedIndex - dirListSize].name);
             this->drawMenuItems(false);
         } else {
-            this->ourUrls = client->list(fileId);
-            if (selectedIndex >= dirListSize) {
-                this->lastFileId.push_back(fileId);
+            try {
+                this->infoImage->SetVisible(true);
+                this->ourUrls = client->list(fileId);
+                if (selectedIndex >= dirListSize) {
+                    this->lastFileId.push_back(fileId);
+                }
+                this->drawMenuItems(true);
+                this->menu->SetSelectedIndex(0);
+                mainApp->CallForRender();
+                this->infoImage->SetVisible(false);
+                this->menu->SetVisible(true);
+            } catch (...) {
+                inst::ui::mainApp->CreateShowDialog("inst.net.failed"_lang, "", {"common.ok"_lang}, false);
             }
-            this->drawMenuItems(true);
         }
     }
 
     void netInstPage::startNetwork() {
-        std::vector<std::string> options = {"inst.net.src.opt0"_lang, "inst.net.src.opt1"_lang};
+        std::vector<std::string> options = {"inst.net.src.opt0"_lang, "inst.net.src.opt2"_lang};
         std::string url;
     
         while (true) {
@@ -162,6 +175,31 @@ namespace inst::ui {
                     }
                     this->lastFileId.push_back(url);
                     break;
+
+                case 1:
+                    client = drive::new_drive(drive::dt_alidrive);
+                    try {
+                        if (client->qrLogin([&](const std::string& content, bool scaned) {
+                            mainApp->CallForRender();
+                            drive::renderQr(content, this->qrcodeImage);
+                            this->infoImage->SetVisible(false);
+                            this->qrcodeImage->SetVisible(true);
+                            this->pageInfoText->SetText(scaned ? "inst.net.qr_scaned"_lang : "inst.net.qr_new"_lang);
+                        }) == drive::ds_ok) {
+                            this->qrcodeImage->SetVisible(false);
+                            this->infoImage->SetVisible(true);
+                            this->ourUrls = client->list("root");
+                            this->lastFileId.push_back("root");
+                            break;
+                        };
+                        
+                    } catch (std::runtime_error& ex) {
+                        inst::ui::mainApp->CreateShowDialog("runtime_error", ex.what(), {"common.ok"_lang}, false);
+                    } catch (...) {
+                        inst::ui::mainApp->CreateShowDialog("inst.net.failed"_lang, "", {"common.ok"_lang}, false);
+                    }
+                    this->qrcodeImage->SetVisible(false);
+                    continue;
 
                 default:
                     continue;

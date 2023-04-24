@@ -7,8 +7,8 @@ A No-Bullshit NSP, NSZ, XCI, and XCZ Installer for Nintendo Switch
 - Installs NSP/NSZ/XCI/XCZ files and split NSP/XCI files from your SD card
 - Installs NSP/NSZ/XCI/XCZ files over LAN or USB from tools such as [NS-USBloader](https://github.com/developersu/ns-usbloader)
 - Installs NSP/NSZ/XCI/XCZ files and split NSP/XCI files from your USB HDD exFAT, NTFS and EXT2/3/4 (NTFS and EXT2/3/4 currently works only with AMS)
-- Installs NSP/NSZ/XCI/XCZ files over the internet by URL or Google Drive
-- Installs NSP/NSZ/XCI/XCZ files over HTTP Directory Indexing like Nginx / Apache...and Tinfoil style JSON
+- Installs NSP/NSZ/XCI/XCZ files over the internet by Aliyun Drive
+- Installs NSP/NSZ/XCI/XCZ files over HTTP Directory Indexing like Nginx / Apache...
 - Verifies NCAs by header signature before they're installed
 - Installs and manages the latest signature patches quickly and easily
 - Based on [Adubbz Tinfoil](https://github.com/Adubbz/Tinfoil)

@@ -39,7 +39,8 @@
             "src": {
                 "title": "您想要通過哪種方式安裝",
                 "opt0": "URL",
-                "opt1": "谷歌網盤（Google Drive）"
+                "opt1": "谷歌網盤（Google Drive）",
+                "opt2": "Aliyun Drive"
             },
             "url": {
                 "hint": "輸入文件的URL地址",
@@ -51,6 +52,8 @@
                 "alt_name": "谷歌網盤文件",
                 "source_string": " 從谷歌網盤"
             },
+            "qr_new": "請用手機 App 掃碼",
+            "qr_scaned": "掃描成功, 請在手機上根據提示確認登錄",
             "top_info": "選擇您要安裝的文件，然後按下 \ue0ef 號",
             "top_info1": "等待連接中... 您的Switch主機IP是: ",
             "failed": "遠程安裝失敗！",
