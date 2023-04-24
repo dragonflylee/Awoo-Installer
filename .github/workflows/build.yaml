@@ -2,7 +2,7 @@ name: Awoo-Installer
 
 on:
   push:
-    tags: ["v*"]
+    tags: ["*"]
 
 permissions:
   contents: write
@@ -25,6 +25,11 @@ jobs:
         dkp-pacman --noconfirm -U https://wii.leseratte10.de/devkitPro/other-stuff/dkp-toolchain-vars-1.0.2-1-any.pkg.tar.xz
         adduser --gecos '' --disabled-password builder
         echo 'builder ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/builder
+    
+    - name: Set workspace permissions
+      run: |
+        chown $(id -u):$(id -g) -R "$GITHUB_WORKSPACE"
+        git config --system --add safe.directory '*'
 
     - name: Build libusbhsfs dependencies
       run: |
@@ -43,6 +48,5 @@ jobs:
     - name: Release and Upload Assets
       uses: softprops/action-gh-release@v1
       with:
+        name: Awoo-Installer ${{ github.ref_name }}
         files: Awoo-Installer.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

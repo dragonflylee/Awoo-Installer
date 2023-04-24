@@ -52,6 +52,7 @@ ROMFS		:=	romfs
 #---------------------------------------------------------------------------------
 DEFINES	+=	-DAPP_VERSION=\"$(APP_VERSION)\"
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+DEFINES  := -DAPP_VERSION=$(APP_VERSION)
 
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections $(ARCH) $(DEFINES)
 CFLAGS	+=	 `curl-config --cflags`
@@ -61,7 +62,6 @@ CFLAGS	+=	`$(PREFIX)pkg-config --cflags libturbojpeg freetype2`
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -Wall #-Werror -D__DEBUG__ -DNXLINK_DEBUG
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -std=gnu++17
-
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)

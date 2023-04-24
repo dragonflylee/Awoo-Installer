@@ -2,6 +2,9 @@
 
 #include <vector>
 
+#define STR_IMPL(x) #x
+#define STR(x) STR_IMPL(x)
+
 namespace inst::config {
     static const std::string appDir = "sdmc:/switch/Awoo-Installer";
     static const std::string configPath = appDir + "/config.json";
