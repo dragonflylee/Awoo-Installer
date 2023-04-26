@@ -34,6 +34,10 @@ namespace inst::ui {
     extern MainApplication *mainApp;
 }
 
+namespace inst::curl {
+    extern const std::string default_user_agent;
+}
+
 namespace tin::network
 {
     // HTTPDownload
@@ -51,7 +55,7 @@ namespace tin::network
 
         curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "tinfoil");
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, inst::curl::default_user_agent.c_str());
         curl_easy_setopt(curl, CURLOPT_RANGE, "0-0");
 
         rc = curl_easy_perform(curl);
@@ -124,7 +128,7 @@ namespace tin::network
 
         curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "tinfoil");
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, inst::curl::default_user_agent.c_str());
         curl_easy_setopt(curl, CURLOPT_RANGE, range.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeDataFunc);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &tin::network::HTTPDownload::ParseHTMLData);
