@@ -9,6 +9,8 @@
 
 namespace inst::curl {
 
+    const std::string default_user_agent = "Awoo-Installer/" + inst::config::appVersion;
+
     struct curl_global {
         curl_global() {
             ASSERT_OK(curl_global_init(CURL_GLOBAL_ALL), "Curl failed to initialized");
@@ -85,6 +87,43 @@ namespace inst::curl {
         }
     };
 
+    client::client() : ctx(new curl_ctx) {}
+
+    client::~client() { delete this->ctx; }
+
+    std::string client::get(const std::string& url, const std::vector<std::string>& headers) {
+        std::ostringstream body;
+        ctx->set_headers(headers);
+        curl_easy_setopt(ctx->easy, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(ctx->easy, CURLOPT_USERAGENT, this->userAgent());
+        curl_easy_setopt(ctx->easy, CURLOPT_HTTPGET, 1L);
+        ctx->perform(&body);
+        return body.str();
+    }
+
+    std::string client::post(const std::string& url, const std::string& data, const std::vector<std::string>& headers) {
+        std::ostringstream body;
+        ctx->set_headers(headers);
+        curl_easy_setopt(ctx->easy, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(ctx->easy, CURLOPT_USERAGENT, this->userAgent());
+        curl_easy_setopt(ctx->easy, CURLOPT_POST, 1L);
+        curl_easy_setopt(ctx->easy, CURLOPT_POSTFIELDS, data.c_str());
+        curl_easy_setopt(ctx->easy, CURLOPT_POSTFIELDSIZE, data.size());
+        ctx->perform(&body);
+        return body.str();
+    }
+
+    std::string client::formEncode(const std::map<std::string, std::string>& form) {
+        std::ostringstream ss;
+        char* escaped;
+        for (auto it : form) {
+            escaped = curl_easy_escape(ctx->easy, it.second.c_str(), it.second.size());
+            ss << it.first << '=' << escaped << '&';
+            curl_free(escaped);
+        }
+        return ss.str();
+    }
+
     int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
         if (ultotal) {
             int uploadProgress = (int)(((double)ulnow / (double)ultotal) * 100.0);
@@ -101,7 +140,7 @@ namespace inst::curl {
         std::ofstream pagefile(pagefilename);
 
         curl_easy_setopt(curl_handle, CURLOPT_URL, ourUrl.c_str());
-        curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "Awoo-Installer");
+        curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, default_user_agent.c_str());
         if (writeProgress)
             curl_easy_setopt(curl_handle, CURLOPT_XFERINFOFUNCTION, progress_callback);
     
@@ -116,7 +155,7 @@ namespace inst::curl {
         curl_ctx curl_handle;
         std::ostringstream stream;
         curl_easy_setopt(curl_handle, CURLOPT_URL, ourUrl.c_str());
-        curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "Awoo-Installer");
+        curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, default_user_agent.c_str());
 
         if (firstRange && secondRange) {
             std::string ourRange = std::to_string(firstRange) + "-" + std::to_string(secondRange);
