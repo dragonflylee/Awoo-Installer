@@ -162,8 +162,9 @@ namespace inst::ui {
                     }
                     this->lastFileId.push_back(url);
                     break;
-                case 1:
-                    break;
+
+                default:
+                    continue;
                 }
             } else {
                 for (std::string url : urls) {

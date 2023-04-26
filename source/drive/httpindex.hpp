@@ -7,6 +7,8 @@
 namespace inst::drive {
     class httpdir : public drive {
     public:
+        drive_type getType() { return dt_httpdir; }
+
         entries list(const std::string& url) {
             std::string response = inst::curl::getRange(url);
             entries urls;
