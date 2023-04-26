@@ -36,47 +36,11 @@ namespace inst::ui {
 
 namespace tin::network
 {
-    // HTTPHeader
+    // HTTPDownload
 
-    HTTPHeader::HTTPHeader(std::string url) :
+    HTTPDownload::HTTPDownload(std::string url) :
         m_url(url)
     {
-    }
-
-    size_t HTTPHeader::ParseHTMLHeader(char* bytes, size_t size, size_t numItems, void* userData)
-    {
-        HTTPHeader* header = reinterpret_cast<HTTPHeader*>(userData);
-        size_t numBytes = size * numItems;
-        std::string line(bytes, numBytes);
-
-        // Remove any newlines or carriage returns
-        line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
-        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
-
-        // Split into key and value
-        if (!line.empty())
-        {
-            auto keyEnd = line.find(": ");
-
-            if (keyEnd != 0)
-            {
-                std::string key = line.substr(0, keyEnd);
-                std::string value = line.substr(keyEnd + 2);
-
-                // Make key lowercase
-                std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-                header->m_values[key] = value;
-            }
-        }
-
-        return numBytes;
-    }
-
-    void HTTPHeader::PerformRequest()
-    {
-        // We don't want any existing values to get mixed up with this request
-        m_values.clear();
-
         CURL* curl = curl_easy_init();
         CURLcode rc = (CURLcode)0;
 
@@ -86,11 +50,9 @@ namespace tin::network
         }
 
         curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
-        curl_easy_setopt(curl, CURLOPT_NOBODY, true);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "tinfoil");
-        curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, &tin::network::HTTPHeader::ParseHTMLHeader);
+        curl_easy_setopt(curl, CURLOPT_RANGE, "0-0");
 
         rc = curl_easy_perform(curl);
         if (rc != CURLE_OK)
@@ -102,63 +64,7 @@ namespace tin::network
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
         curl_easy_cleanup(curl);
 
-        if (httpCode != 200 && httpCode != 204)
-        {
-            THROW_FORMAT("Unexpected HTTP response code when retrieving header: %lu\n", httpCode);
-        }
-    }
-
-    bool HTTPHeader::HasValue(std::string key)
-    {
-        return m_values.count(key);
-    }
-
-    std::string HTTPHeader::GetValue(std::string key)
-    {
-        return m_values[key];
-    }
-
-    // End HTTPHeader
-    // HTTPDownload
-
-    HTTPDownload::HTTPDownload(std::string url) :
-        m_url(url), m_header(url)
-    {
-        // The header won't be populated until we do this
-        m_header.PerformRequest();
-
-        if (m_header.HasValue("accept-ranges"))
-        {
-            m_rangesSupported = m_header.GetValue("accept-ranges") == "bytes";
-        }
-        else
-        {
-            CURL* curl = curl_easy_init();
-            CURLcode rc = (CURLcode)0;
-
-            if (!curl)
-            {
-                THROW_FORMAT("Failed to initialize curl\n");
-            }
-
-            curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
-            curl_easy_setopt(curl, CURLOPT_NOBODY, true);
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, "tinfoil");
-            curl_easy_setopt(curl, CURLOPT_RANGE, "0-0");
-
-            rc = curl_easy_perform(curl);
-            if (rc != CURLE_OK)
-            {
-                THROW_FORMAT("Failed to retrieve HTTP Header: %s\n", curl_easy_strerror(rc));
-            }
-
-            u64 httpCode = 0;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-            curl_easy_cleanup(curl);
-
-            m_rangesSupported = httpCode == 206;
-        }
+        m_rangesSupported = httpCode == 206;
     }
 
     size_t HTTPDownload::ParseHTMLData(char* bytes, size_t size, size_t numItems, void* userData)
