@@ -16,6 +16,7 @@ namespace inst::ui {
             Image::Ref titleImage;
             TextBlock::Ref appVersionText;
         private:
+            drive::drive::ref client;
             drive::drive::entries ourUrls;
             std::vector<std::string> selectedUrls;
             std::vector<std::string> lastFileId;

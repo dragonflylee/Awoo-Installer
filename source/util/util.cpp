@@ -299,7 +299,7 @@ namespace inst::util {
             if (jsonData.size() == 0) return false;
             nlohmann::json ourJson = nlohmann::json::parse(jsonData);
             std::string tagName = ourJson["tag_name"].get<std::string>();
-            if (tagName != inst::config::appVersion) {
+            if (tagName.compare(inst::config::appVersion) > 0) {
                 inst::config::updateInfo = { tagName, ourJson["assets"][0]["browser_download_url"] };
                 return true;
             }

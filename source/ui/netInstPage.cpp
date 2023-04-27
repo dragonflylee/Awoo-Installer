@@ -14,7 +14,6 @@
 namespace inst::ui {
     extern MainApplication *mainApp;
 
-    drive::drive::ref client;
     std::string sourceString = "";
 
     netInstPage::netInstPage() : Layout::Layout() {
