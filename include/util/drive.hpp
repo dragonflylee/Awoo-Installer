@@ -38,10 +38,6 @@ namespace inst::drive {
 
     drive::ref new_drive(drive_type type);
 
-    void renderQr(const std::string& text, pu::ui::elm::Image::Ref& image);
+    void renderQr(const std::string& text, pu::ui::elm::Image::Ref& image, int realwidth);
     std::string hex_encode(const unsigned char* data, size_t len);
-
-    static const std::vector<std::string> knownExts = {
-        ".nsp", ".nsz", ".xci", ".xcz",
-    };
 }

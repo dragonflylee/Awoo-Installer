@@ -12,14 +12,14 @@ static void png_output_flush(png_structp png_ptr, png_bytep data, png_size_t len
     p->insert(p->end(), data, data + length);
 }
 
-void renderQr(const std::string& text, Image::Ref& image) {
+void renderQr(const std::string& text, Image::Ref& image, int realwidth) {
     const QrCode qr = QrCode::encodeText(text.c_str(), QrCode::Ecc::LOW);
 
     const int margin = 2;
-    const int size   = 10;
-    int width        = qr.getSize();
+    int width  = qr.getSize();
+    int size   = realwidth / width;
+    realwidth = (width + margin * 2) * size;
 
-    int realwidth = (width + margin * 2) * size;
     std::vector<uint8_t> row((realwidth + 7) / 8);
     std::vector<uint8_t> out;
 

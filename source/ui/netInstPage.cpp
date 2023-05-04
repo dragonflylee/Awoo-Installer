@@ -147,32 +147,19 @@ namespace inst::ui {
                     url = inst::util::softwareKeyboard("inst.net.url.hint"_lang, inst::config::lastNetUrl, 500);
                     if (url.empty()) continue;
 
-                    if (inst::util::formatUrlString(url) == "" || url == "https://" || url == "http://") {
-                        mainApp->CreateShowDialog("inst.net.url.invalid"_lang, "", {"common.ok"_lang}, false);
-                        continue;
-                    }
-                    // if url is single file, start install
-                    for (auto& ext : drive::knownExts) {
-                        if (url.find(ext) != std::string::npos) {
-                            this->selectedUrls = { url };
-                            this->startInstall(true);
-                            return;
-                        }
-                    }
-                    if (url.back() != '/') {
-                        url += '/';
-                    }
-                    inst::config::lastNetUrl = url;
-                    inst::config::setConfig();
-
                     client = drive::new_drive(drive::dt_httpdir);
                     this->ourUrls = client->list(url);
-
-                    if (this->ourUrls.empty()) {
-                        inst::ui::mainApp->CreateShowDialog("inst.net.http.invalid"_lang, "", {"common.ok"_lang}, false);
-                        continue;
+                    switch (this->ourUrls.size()) {
+                        case 0:
+                            inst::ui::mainApp->CreateShowDialog("inst.net.url.invalid"_lang, "", {"common.ok"_lang}, false);
+                            continue;
+                        case 1:
+                            this->selectedUrls = { this->ourUrls[0].id };
+                            this->startInstall(true);
+                            return;
+                        default:
+                            this->lastFileId.push_back(url);
                     }
-                    this->lastFileId.push_back(url);
                     break;
 
                 case 1:
@@ -180,7 +167,7 @@ namespace inst::ui {
                     try {
                         if (client->qrLogin([&](const std::string& content, bool scaned) {
                             mainApp->CallForRender();
-                            drive::renderQr(content, this->qrcodeImage);
+                            drive::renderQr(content, this->qrcodeImage, 440);
                             this->infoImage->SetVisible(false);
                             this->qrcodeImage->SetVisible(true);
                             this->pageInfoText->SetText(scaned ? "inst.net.qr_scaned"_lang : "inst.net.qr_new"_lang);
