@@ -26,8 +26,7 @@ drive::entries aliyundrive::list(const std::string& file_id) {
     json j = this->request("/adrive/v3/file/list", {
         {"drive_id", this->drive_id},
         {"parent_file_id", file_id},
-        {"limit", 20},
-        {"all", false},
+        {"all", true},
         {"url_expire_sec", 14400},
         {"image_thumbnail_process", "image/resize,w_256/format,jpeg"},
         {"image_url_process", "image/resize,w_1920/format,jpeg/interlace,1"},
@@ -200,33 +199,56 @@ drive_status aliyundrive::confirmLogin() {
     if (!j.contains("goto")) {
         return ds_error;
     }
-#ifdef ALIYUN_SIGN
-    std::vector<uint8_t> sig(MBEDTLS_ECDSA_MAX_LEN, 0);
-    std::vector<uint8_t> pub(MBEDTLS_ECP_MAX_BYTES, 0);
+    return this->createSession();
+}
+
+static inline int mbd_rand(void *rng_state, unsigned char *output, size_t len) {
+    randomGet(output, len);
+    return 0;
+}
+
+drive_status aliyundrive::createSession() {
+    std::string msg = "5dde4e1bdf9e4966b387ba58f4b3fdc3:" + this->device_id + ":" + this->user_id + ":0";
+
     mbedtls_ecdsa_context ctx_sign;
-    size_t sig_len = sig.size();
-    
     mbedtls_ecdsa_init(&ctx_sign);
     mbedtls_ecp_group_load(&ctx_sign.grp, MBEDTLS_ECP_DP_SECP256K1);
     mbedtls_mpi_read_string(&ctx_sign.d, 16, this->device_id.c_str());
     mbedtls_ecp_mul(&ctx_sign.grp, &ctx_sign.Q, &ctx_sign.d, &ctx_sign.grp.G, nullptr, nullptr);
     // dump public key
     size_t pub_len = 0;
-    mbedtls_ecp_point_write_binary(&ctx_sign.grp, &ctx_sign.Q,
-        MBEDTLS_ECP_PF_UNCOMPRESSED, &pub_len, pub.data(), pub.size());
-    pub_key_char = hex_encode(pub.data(), pub_len);
-
+    std::vector<uint8_t> pub(MBEDTLS_ECP_MAX_BYTES, 0);
+    mbedtls_ecp_point_write_binary(&ctx_sign.grp, &ctx_sign.Q, MBEDTLS_ECP_PF_UNCOMPRESSED, &pub_len, pub.data(), pub.size());
     // sign message
-    std::string msg = "5dde4e1bdf9e4966b387ba58f4b3fdc3:" + this->device_id + ":" + this->user_id + ":0";
-    mbedtls_ecdsa_write_signature(&ctx_sign, MBEDTLS_MD_SHA256, (uint8_t*)msg.c_str(), msg.size(), 
-        sig.data(), &sig_len, nullptr, nullptr);
-    this->signature = hex_encode(sig.data(), sig_len);;
+    unsigned char msg_hash[32];
+    std::vector<uint8_t> sigdata(MBEDTLS_ECDSA_MAX_LEN, 0);
+    mbedtls_mpi r, s;
+    mbedtls_sha256_ret((uint8_t*)msg.c_str(), msg.size(), msg_hash, 0);
+    mbedtls_mpi_init(&r);
+    mbedtls_mpi_init(&s);
+    mbedtls_ecdsa_sign(&ctx_sign.grp, &r, &s, &ctx_sign.d, msg_hash, sizeof(msg_hash), mbd_rand, nullptr);
+    size_t plen = mbedtls_mpi_size(&r);
+    mbedtls_mpi_write_binary(&r, sigdata.data(), plen);
+    mbedtls_mpi_write_binary(&s, sigdata.data() + plen, plen);
+    sigdata[plen * 2] = 1;
+    this->signature = hex_encode(sigdata.data(), plen * 2 + 1);
     mbedtls_ecdsa_free(&ctx_sign);
-#endif
+
+    SetSysDeviceNickName nick;
+    std::string deviceName = "Switch";
+    if (R_SUCCEEDED(setsysGetDeviceNickname(&nick))) {
+        deviceName = nick.nickname;
+    }
+    json j = this->request("/users/v1/users/device/create_session", {
+        {"deviceName", deviceName},
+        {"modelName", "Windows客户端"},
+        {"pubKey", hex_encode(pub.data(), pub_len)},
+    });
+
     // store token
     config::aliDriveToken = this->access_token;
     config::setConfig();
-    return ds_ok;
+    return j.at("success").get<bool>() ? ds_ok : ds_error;
 }
 
 }

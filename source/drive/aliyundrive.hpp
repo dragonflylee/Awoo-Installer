@@ -17,6 +17,7 @@ namespace inst::drive {
         std::string checkQrcode(const std::string& query);
         drive_status getSelfuser();
         drive_status confirmLogin();
+        drive_status createSession();
 
         nlohmann::json request(const std::string& api, const nlohmann::json& j);
 
