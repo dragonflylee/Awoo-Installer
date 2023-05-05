@@ -179,6 +179,10 @@ namespace inst::ui {
                             break;
                         };
                         
+                    } catch (json::parse_error& ex) {
+                        inst::ui::mainApp->CreateShowDialog("json::parse_error", ex.what(), {"common.ok"_lang}, false);
+                    } catch (json::out_of_range& ex) {
+                        inst::ui::mainApp->CreateShowDialog("json::out_of_range", ex.what(), {"common.ok"_lang}, false);
                     } catch (std::runtime_error& ex) {
                         inst::ui::mainApp->CreateShowDialog("runtime_error", ex.what(), {"common.ok"_lang}, false);
                     } catch (...) {

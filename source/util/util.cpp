@@ -31,9 +31,13 @@ namespace inst::util {
         #endif
         awoo_usbCommsInitialize();
         nx::hdd::init();
+
+        setsysInitialize();
     }
 
     void deinitApp () {
+        setsysExit();
+
         nx::hdd::exit();
         socketExit();
         awoo_usbCommsExit();
