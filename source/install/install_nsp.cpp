@@ -69,8 +69,7 @@ namespace tin::install::nsp
 
             NcmContentInfo cnmtContentInfo;
             cnmtContentInfo.content_id = cnmtContentId;
-            cnmtContentInfo.size_high = (cnmtNcaSize >> 32) & 0xFFFF;
-            cnmtContentInfo.size_low = cnmtNcaSize & 0xFFFFFFFF;
+            ncmU64ToContentInfoSize(cnmtNcaSize & 0xFFFFFFFFFFFF, &cnmtContentInfo);
             cnmtContentInfo.content_type = NcmContentType_Meta;
 
             CNMTList.push_back( { tin::util::GetContentMetaFromNCA(cnmtNCAFullPath), cnmtContentInfo } );
