@@ -338,6 +338,10 @@ public:
                else
                {
                     append(m_buffer, ptr, sz);
+
+                    processChunk(m_buffer.data(), m_buffer.size());
+                    m_buffer.resize(0);
+
                     sz = 0;
                }
 
