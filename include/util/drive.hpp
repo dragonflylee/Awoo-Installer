@@ -11,7 +11,7 @@ namespace inst::drive {
         ds_canceled,
         ds_error,
     };
- 
+
     struct drive_entry {
         std::string id;
         std::string name;
@@ -21,7 +21,7 @@ namespace inst::drive {
     enum drive_type {
         dt_httpdir,  // Http index
         dt_gdrive,   // Google Drive
-        dt_alidrive, // AliyunDrive
+        dt_alipan,   // Aliyun Drive
     };
 
     class drive {
@@ -35,4 +35,6 @@ namespace inst::drive {
     };
 
     drive::ref new_drive(drive_type type);
-}
+    std::string hex_encode(const unsigned char* data, size_t len);
+
+}  // namespace inst::drive

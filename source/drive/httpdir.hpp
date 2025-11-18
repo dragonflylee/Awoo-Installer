@@ -5,9 +5,9 @@
 namespace inst::drive {
     class httpdir : public drive {
     public:
-        drive_type getType() { return dt_httpdir; }
+        drive_type getType() override { return dt_httpdir; }
 
-        entries list(const std::string& url);
+        entries list(const std::string& url) override;
     };
 
 }
