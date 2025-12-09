@@ -2,26 +2,67 @@ name: Awoo-Installer
 
 on:
   push:
-    branches: ["*"]
+    branches:
+      - "*"       # 继续对所有分支构建
+    tags:
+      - "v*"      # 对 v 开头的 tag 也触发（用于发版）
 
 permissions:
-  contents: write
+  contents: read  # 默认只读
+  # release job 会单独请求 write 权限
 
 jobs:
   build:
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkita64:20251117
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: Build Awoo
-      run: |
-        git config --system --add safe.directory '*'
-        make -j$(nproc) all
-    - name: Upload Assets
-      uses: actions/upload-artifact@v4
-      with:
-        name: Awoo-Installer
-        path: Awoo-Installer.nro
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Mark repo as safe directory
+        run: git config --system --add safe.directory '*'
+
+      - name: Build Awoo
+        run: make -j"$(nproc)" all
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Awoo-Installer
+          path: Awoo-Installer.nro
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # 只有 push tag 时才跑 release（避免普通分支 push 误发版）
+    if: github.ref_type == 'tag'
+
+    permissions:
+      contents: write  # 创建 / 更新 Release 需要写权限
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Awoo-Installer
+          path: dist
+
+      - name: Create zip package (max compression)
+        run: |
+          cd dist
+          zip -9 Awoo-Installer.zip Awoo-Installer.nro
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Awoo-Installer.zip
+          # 根据 tag 名自动判断是否是预发布（例如 v1.0.0-rc1 / v1.0.0-beta）
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

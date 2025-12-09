@@ -44,7 +44,7 @@ DATA		:=	data
 INCLUDES	:=	include include/ui include/data include/install include/nx include/nx/ipc include/util include/Plutonium/Plutonium/Include include/libusbhsfs/include
 APP_TITLE	:=	Awoo Installer
 APP_AUTHOR	:=	Huntereb & Behemoth
-APP_VERSION	:=	1.3.6
+APP_VERSION	:=	1.3.6e
 ROMFS		:=	romfs
 
 #---------------------------------------------------------------------------------
